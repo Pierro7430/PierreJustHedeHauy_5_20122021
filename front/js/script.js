@@ -1,25 +1,3 @@
-//--------------------------------------------------VARIABLE NECESSAIRE-------------------------------------------------
-
-// Déclaration de la variable associé au HTML
-let items = document.getElementById('items');
-
-//----------------------------------------------------------------------------------------------------------------------
-
-
-
-
-//-----------------------------------------------AU CHARGEMENT DE LA PAGE-----------------------------------------------
-
-// Récupération des data de l'API
-fetch('http://localhost:3000/api/products')
-    .then(response => response.json())
-    .then (data => addProducts(data))
-
-//----------------------------------------------------------------------------------------------------------------------
-
-
-
-
 //----------------------------------------AFFICHAGE DES ELEMENTS DANS LE HTML-------------------------------------------
 
 // Fonction qui à partir des Data de l'API va pouvoir insérer les bonnes valeurs et afficher les éléments dans le HTML
@@ -28,10 +6,12 @@ function addProducts(products) {
     // En fonction du nombre d'élément dans le le tableau products, ma fonction effectue les tâches suivantes
     for(let i= 0; i < products.length; i++) {
 
+        // Déclaration de la variable associé au HTML
+        let items = document.getElementById('items');
         // Déclaration de la variable qui va créer une balise <a>
         let productLink = document.createElement('a');
         // Ajout du href avec l'url de la page produit. L'ajout du '?' à la fin permet d'ajouter à la suite l'ID du produit correspondant (methode GET)
-        productLink.href = './product.html?' + products[i]._id;
+        productLink.href = './product.html?' + "idProduct=" + products[i]._id;
         // Création de la balise dans le HTML
         items.appendChild(productLink);
 
@@ -74,4 +54,25 @@ function addProducts(products) {
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------- 
+//----------------------------------------AFFICHAGE DES ELEMENTS DANS LE HTML-------------------------------------------
+
+
+
+
+//-----------------------------------------------AU CHARGEMENT DE LA PAGE-----------------------------------------------
+
+// Récupération des data de l'API
+function init() {
+    fetch('http://localhost:3000/api/products', {
+        method: 'GET',
+        headers: {'Content-type': 'application/json;charset=UTF-8'}
+    })
+    .then(response => response.json())
+    .then(data => addProducts(data))
+    .catch(error => alert('Impossible de récupérer les datas de l\'API'));
+}
+
+// Au chargement de la page, lancement de la fonction init
+init();
+
+//-----------------------------------------------AU CHARGEMENT DE LA PAGE-----------------------------------------------

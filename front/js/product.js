@@ -1,10 +1,12 @@
-//-----------------------------------------------VARIABLES NECESSAIRES--------------------------------------------------
+//-------------------------------------------------VARIABLES GLOBALES---------------------------------------------------
 
-// Récupération de la chaîne de requête dans l'url
-let queryString_url_id = window.location.search;
+// Récupération de keys et paramètres dans l'url
+let paramsString = window.location.search;
+let searchParams = new URLSearchParams(paramsString);
 
-// Extraire uniquement l'id sans le '?'
-let idProduct = queryString_url_id.slice(1);
+// Récupération de la value de la key idProduct avec la méthode GET (interface URLSearchParams)
+let idProduct = searchParams.get("idProduct");
+
 
 // Déclaration des variables associées au HTML 
 let containerImg = document.getElementsByClassName('item__img')[0];
@@ -12,160 +14,26 @@ let selectColors = document.getElementById('colors');
 let btnAddCart = document.getElementById('addToCart');
 let quantityProduct = document.getElementById('quantity');
 
-//----------------------------------------------------------------------------------------------------------------------
+let infoProduct = {};
 
-
-
-
-//-----------------------------------------------AU CHARGEMENT DE LA PAGE-----------------------------------------------
-
-// Au chargement de la page, on va chercher les informations de l'API et on lance la fonction productSheet()
-fetch("http://localhost:3000/api/products/" + idProduct)
-     .then(reponse => reponse.json())
-     .then (data => productSheet(data))
-
-//----------------------------------------------------------------------------------------------------------------------
-
-
-
-
-//----------------------------------------------------FICHE PRODUIT-----------------------------------------------------
-
-// Fonction qui a partir des Data de l'API va pouvoir insérer les bonnes valeurs
-function productSheet(product) {
-
-    //  Création des élements dans le HTML
-    createElement(product);
-    //  Désactivation du bouton ajout au panier
-    disableBtnAddCart();
-
-}
-
-
-// Fonction qui crée les élements dans le HTML
-function createElement(data) {
-
-    // Déclaration de la variable qui va créer une balise <img>
-    let productImg = document.createElement('img');
-    // Ajout de la source de l'image correspondante au produit
-    productImg.src = data.imageUrl;
-    // Ajout de l'alt de l'image correspondante au produit
-    productImg.alt = data.altTxt;
-    // Création de la balise dans le HTML
-    containerImg.appendChild(productImg);
-
-
-    // Déclaration de la variable associé au HTML
-    let productTitle = document.getElementById('title');
-    // Ajout du texte, ici le nom du produit
-    productTitle.innerText = data.name;
-
-
-    // Déclaration de la variable associé au HTML
-    let productPrice = document.getElementById('price');
-    // Ajout du texte, ici le prix du produit
-    productPrice.innerText = data.price;
-
-
-    // Déclaration de la variable associé au HTML
-    let productDescription = document.getElementById('description');
-    // Ajout du texte, ici la descritption du produit
-    productDescription.innerText = data.description;
-
-
-    // Fontion pour ajouter les options couleurs dans le select. En fonction du nombre d'élément dans le tableau colors, ma fonction ajoute une balise option
-    for(let i= 0; i < data.colors.length; i++) {
-        // Déclaration de la variable qui va créer une balise <option>
-        let colorsOption = document.createElement('option');
-        // Ajout du texte
-        colorsOption.innerText = data.colors[i];
-        // Ajout de l'attribut valeur
-        colorsOption.value = data.colors[i];
-        // Création de la balise dans le HTML
-        selectColors.appendChild(colorsOption);
-    }
-
-
-    // Récupération des infos produits dans l'objet infoProduct
-    infoProduct = {
-        name_product: data.name,
-        price_product: data.price,
-        img_url: data.imageUrl,
-        alt_txt: data.altTxt,
-    }
-   
-}
-
-
-// Fonction qui désactive le bouton panier
-function disableBtnAddCart() {
-    btnAddCart.disabled = true;
-    btnAddCart.style.color = '#181818';
-    btnAddCart.style.backgroundColor = '#939393';
-    btnAddCart.style.pointerEvents = 'none';
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
-
-
-
-//---------------------------------VERIFICATION DU FORM ET ACTIVATION DU BOUTON PANIER----------------------------------
-
-// Vérification que le form est correctement remplie afin d'activer le bouton panier
-[selectColors, quantityProduct].forEach(function(element) {
-
-    // Pour chacun des <input> on vérifie les valeurs remplies
-    element.addEventListener('input', function() {
-
-        // Si le choix des couleurs est fait
-        if (selectColors.value) {
-            // Et que la quantité choisie est entre 1 et 100, alors on active le bouton ajout au panier
-            if (quantityProduct.value > 0 && quantityProduct.value <= 100) {
-                activeBtnAddCart();
-            }
-
-        // Si le choix de la quantité choisie est entre 1 et 100
-        } if (quantityProduct.value > 0 && quantityProduct.value <= 100 ) {
-            // Et que le choix des couleurs est fait, alors on active le bouton ajout au panier
-            if (selectColors.value) {
-                activeBtnAddCart();
-            }       
-            
-        // Si le choix de la quantité choisie est < 1 OU > 100 OU que la couleur n'est pas choisie, on désactive le bouton panier
-        } if ((selectColors.value == 0 || quantityProduct.value < 1 || quantityProduct.value > 100)) {
-            disableBtnAddCart();
-        } 
-
-    })
-    
-})
-
-
-// Fonction qui active le bouton panier
-function activeBtnAddCart() {
-    btnAddCart.disabled = false;
-    btnAddCart.style.color = '';
-    btnAddCart.style.backgroundColor = '';
-    btnAddCart.style.pointerEvents = 'auto';
-}
-
-//----------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------VARIABLES GLOBALES---------------------------------------------------
 
 
 
 
 //--------------------------------------ENVOIE DES PRODUITS DANS LE LOCAL STORAGE---------------------------------------
 
-// Lors du clic sur le bouton 'Ajouter au panier'
-btnAddCart.addEventListener('click', (event)=>{
-    
-    // Empêcher le comportement par défaut du bouton (rafraichissement de la page)
-    event.preventDefault();
-    // Lancement de la fonction qui envoie les produits dans le Local Storage
-    sendProductLocalStorage();     
-    
-})   
+// Fonction qui met à jour la key et la value de la map avant de l'envoyer dans le Local Storage
+function updateMap(myMap, myKey, myValue, myQuantity, myColor) {
+
+     // Ajout de la key et de la value dans la map
+     myMap.set(myKey, myValue);
+     // Envoie de la map dans le Local Storage
+     localStorage.cart = JSON.stringify(Array.from(myMap.entries()));
+     // Afficher le produit et les quantités ajoutés dans le panier
+     window.alert(myQuantity + ' ' + infoProduct.name_product + ' de couleur ' + myColor + ' a bien été ajouté au panier');
+     
+}
 
 
 // Fonction qui envoie les produits dans le local storage
@@ -198,7 +66,7 @@ function sendProductLocalStorage() {
 
         // Création d'une nouvelle map productCart
         let productCart = new Map();
-        // Ajout de la ley et de la value dans la map et envoie dans le Local Storage
+        // Ajout de la key et de la value dans la map et envoie dans le Local Storage
         updateMap(productCart, idColorProduct, selectedProduct, quantityProductChosen, colorChoice);
 
     } 
@@ -249,16 +117,168 @@ function sendProductLocalStorage() {
 
 }
 
-// Fonction qui met à jour la key et la value de la map avant de l'envoyer dans le Local Storage
-function updateMap(myMap, myKey, myValue, myQuantity, myColor) {
 
-     // Ajout de la key et de la value dans la map
-     myMap.set(myKey, myValue);
-     // Envoie de la map dans le Local Storage
-     localStorage.cart = JSON.stringify(Array.from(myMap.entries()));
-     // Afficher le produit et les quantités ajoutés dans le panier
-     window.alert(myQuantity + ' ' + infoProduct.name_product + ' de couleur ' + myColor + ' a bien été ajouté au panier');
-     
+// Lors du clic sur le bouton 'Ajouter au panier'
+btnAddCart.addEventListener('click', (event)=>{
+    
+    // Empêcher le comportement par défaut du bouton (rafraichissement de la page)
+    event.preventDefault();
+    // Lancement de la fonction qui envoie les produits dans le Local Storage
+    sendProductLocalStorage();     
+    
+})   
+
+//--------------------------------------ENVOIE DES PRODUITS DANS LE LOCAL STORAGE---------------------------------------
+
+
+
+
+//---------------------------------VERIFICATION DU FORM ET ACTIVATION DU BOUTON PANIER----------------------------------
+
+// Fonction qui active le bouton panier
+function activeBtnAddCart() {
+    btnAddCart.disabled = false;
+    btnAddCart.style.color = '';
+    btnAddCart.style.backgroundColor = '';
+    btnAddCart.style.pointerEvents = 'auto';
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+
+// Vérification que le form est correctement remplie afin d'activer le bouton panier
+[selectColors, quantityProduct].forEach(function(element) {
+
+    // Pour chacun des <input> on vérifie les valeurs remplies
+    element.addEventListener('input', function() {
+
+        // Si le choix des couleurs est fait
+        if (selectColors.value) {
+            // Et que la quantité choisie est entre 1 et 100, alors on active le bouton ajout au panier
+            if (quantityProduct.value > 0 && quantityProduct.value <= 100) {
+                activeBtnAddCart();
+            }
+
+        // Si le choix de la quantité choisie est entre 1 et 100
+        } if (quantityProduct.value > 0 && quantityProduct.value <= 100 ) {
+            // Et que le choix des couleurs est fait, alors on active le bouton ajout au panier
+            if (selectColors.value) {
+                activeBtnAddCart();
+            }       
+            
+        // Si le choix de la quantité choisie est < 1 OU > 100 OU que la couleur n'est pas choisie, on désactive le bouton panier
+        } if ((selectColors.value == 0 || quantityProduct.value < 1 || quantityProduct.value > 100)) {
+            disableBtnAddCart();
+        } 
+
+    })
+    
+})
+
+//---------------------------------VERIFICATION DU FORM ET ACTIVATION DU BOUTON PANIER----------------------------------
+
+
+
+
+//----------------------------------------------------FICHE PRODUIT-----------------------------------------------------
+
+// Fonction qui désactive le bouton panier
+function disableBtnAddCart() {
+    btnAddCart.disabled = true;
+    btnAddCart.style.color = '#181818';
+    btnAddCart.style.backgroundColor = '#939393';
+    btnAddCart.style.pointerEvents = 'none';
+}
+
+
+// Fontion pour ajouter les options couleurs dans le select. En fonction du nombre d'élément dans le tableau colors, ma fonction ajoute une balise option
+function createColorOption(data) {
+    
+    for(let i= 0; i < data.colors.length; i++) {
+        // Déclaration de la variable qui va créer une balise <option>
+        let colorsOption = document.createElement('option');
+        // Ajout du texte
+        colorsOption.innerText = data.colors[i];
+        // Ajout de l'attribut valeur
+        colorsOption.value = data.colors[i];
+        // Création de la balise dans le HTML
+        selectColors.appendChild(colorsOption);
+    }
+}
+
+
+// Fonction qui crée les élements dans le HTML
+function createElement(data) {
+
+    // Déclaration de la variable qui va créer une balise <img>
+    let productImg = document.createElement('img');
+    // Ajout de la source de l'image correspondante au produit
+    productImg.src = data.imageUrl;
+    // Ajout de l'alt de l'image correspondante au produit
+    productImg.alt = data.altTxt;
+    // Création de la balise dans le HTML
+    containerImg.appendChild(productImg);
+
+
+    // Déclaration de la variable associé au HTML
+    let productTitle = document.getElementById('title');
+    // Ajout du texte, ici le nom du produit
+    productTitle.innerText = data.name;
+
+
+    // Déclaration de la variable associé au HTML
+    let productPrice = document.getElementById('price');
+    // Ajout du texte, ici le prix du produit
+    productPrice.innerText = data.price;
+
+
+    // Déclaration de la variable associé au HTML
+    let productDescription = document.getElementById('description');
+    // Ajout du texte, ici la descritption du produit
+    productDescription.innerText = data.description;
+
+
+    // Fonction qui crée les options de couleurs dans le select
+    createColorOption(data);
+
+
+    // Récupération des infos produits dans l'objet infoProduct
+    infoProduct = {
+        name_product: data.name,
+        img_url: data.imageUrl,
+        alt_txt: data.altTxt,
+    }
+   
+}
+
+
+// Fonction qui a partir des Data de l'API va pouvoir insérer les bonnes valeurs
+function productSheet(product) {
+
+    //  Création des élements dans le HTML
+    createElement(product);
+    //  Désactivation du bouton ajout au panier
+    disableBtnAddCart();
+
+}
+
+//----------------------------------------------------FICHE PRODUIT-----------------------------------------------------
+
+
+
+
+//-----------------------------------------------AU CHARGEMENT DE LA PAGE-----------------------------------------------
+
+// Au chargement de la page, on va chercher les informations de l'API et on lance la fonction productSheet()
+function init() {
+    fetch('http://localhost:3000/api/products/' + idProduct, {
+        method: 'GET',
+        headers: {'Content-type': 'application/json;charset=UTF-8'}
+    })
+    .then(response => response.json())
+    .then (data => productSheet(data))
+    .catch(error => alert('Impossible de récupérer les datas de l\'API'));
+}
+
+// Au chargement de la page, lancement de la fonction init
+init();
+
+//-----------------------------------------------AU CHARGEMENT DE LA PAGE-----------------------------------------------

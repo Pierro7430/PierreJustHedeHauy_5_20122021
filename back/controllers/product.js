@@ -36,6 +36,7 @@ exports.getOneProduct = (req, res, next) => {
 /**
  *
  * Expects request to contain:
+ * {
  * contact: {
  *   firstName: string,
  *   lastName: string,
@@ -44,6 +45,7 @@ exports.getOneProduct = (req, res, next) => {
  *   email: string
  * }
  * products: [string] <-- array of product _id
+ * }
  *
  */
 exports.orderProducts = (req, res, next) => {
